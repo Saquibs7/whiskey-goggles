@@ -39,3 +39,30 @@ Ensure the following are installed:
 git clone https://github.com/Saquibs7/whiskey-goggles.git
 cd whiskey-goggles
 pip install -r requirements.txt
+```
+## 📁 Data Setup & Preparation
+
+### 📂 Dataset
+- **Source:** Provided whisky bottle dataset  
+- **File:** `data/whisky_data.csv`  
+- **Includes:** ID, name, size, proof, spirit type, popularity, price, and other attributes
+
+### 🖼 Image Downloading
+- Downloaded bottle images from dataset URLs  
+- **Stored in:** `data/images/`  
+- **Script:** `scripts/download_images.py`
+
+### 🧹 Data Cleaning
+- Removed missing values and cleaned irrelevant entries  
+- Label-encoded categorical variables (e.g., `spirit_type`)  
+- **Script:** `scripts/data_preprocessing.py`
+
+### 🖼 Image Preprocessing
+- Resized all images to `224x224` to standardize model input  
+- **Script:** `scripts/image_preprocessing.py`
+
+### 📊 Exploratory Data Analysis (EDA)
+- Analyzed feature distributions and checked for missing values  
+- Created visualizations for understanding trends in data  
+- **Script:** `scripts/eda.py`
+
