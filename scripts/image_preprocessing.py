@@ -1,23 +1,42 @@
-from PIL import Image
 import os
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing import image
+import numpy as np
+from tqdm import tqdm
 
-# Get the absolute path to your image folder
+# Directories
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-image_folder = os.path.join(ROOT_DIR, 'data', 'images')
+train_dir = os.path.join(ROOT_DIR, 'data', 'train')
+val_dir = os.path.join(ROOT_DIR, 'data', 'val')
 
-for filename in os.listdir(image_folder):
-    if filename.endswith(('.jpg', '.png')):
-        path = os.path.join(image_folder, filename)
-        try:
-            img = Image.open(path)
+# Initialize ImageDataGenerator with augmentation for training
+train_datagen = ImageDataGenerator(
+    rescale=1./255,  # Normalize pixel values
+    rotation_range=30,  # Rotate image by up to 30 degrees
+    width_shift_range=0.2,  # Shift image horizontally by 20%
+    height_shift_range=0.2,  # Shift image vertically by 20%
+    shear_range=0.2,  # Apply shearing transformations
+    zoom_range=0.2,  # Apply zoom transformations
+    horizontal_flip=True,  # Flip images horizontally
+    fill_mode='nearest'  # Fill missing pixels with nearest value
+)
 
-            # Convert images with transparency to RGBA
-            if img.mode == 'P' or img.mode == 'LA':
-                img = img.convert('RGBA')
+# For validation, just rescale (no augmentation)
+val_datagen = ImageDataGenerator(rescale=1./255)
 
-            # Resize and save
-            img = img.resize((224, 224))
-            img.save(path)
+# Flow data from the directories
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(224, 224),  # Resize images to 224x224
+    batch_size=32,
+    class_mode='categorical',  # Assuming the classes are encoded in one-hot format
+    shuffle=True
+)
 
-        except Exception as e:
-            print(f"Error processing image {filename}: {e}")
+val_generator = val_datagen.flow_from_directory(
+    val_dir,
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=False
+)

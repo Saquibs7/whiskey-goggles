@@ -47,19 +47,17 @@ pip install -r requirements.txt
 - **File:** `data/whisky_data.csv`  
 - **Includes:** ID, name, size, proof, spirit type, popularity, price, and other attributes
 
-### 🖼 Image Downloading
-- Downloaded bottle images from dataset URLs  
-- **Stored in:** `data/images/`  
-- **Script:** `scripts/download_images.py`
-
 ### 🧹 Data Cleaning
 - Removed missing values and cleaned irrelevant entries  
 - Label-encoded categorical variables (e.g., `spirit_type`)  
 - **Script:** `scripts/data_preprocessing.py`
 
-### 🖼 Image Preprocessing
-- Resized all images to `224x224` to standardize model input  
-- **Script:** `scripts/image_preprocessing.py`
+### 🖼 Image Downloading & Dataset Splitting
+- Downloaded whisky bottle images from URLs in the dataset  
+- Normalized brand names and organized images into model-ready folders  
+- **Split into:** `data/train/{brand_name}/` and `data/val/{brand_name}/`  
+- **Script:** `scripts/download_images.py`
+
 
 ### 📊 Exploratory Data Analysis (EDA)
 - Analyzed feature distributions and checked for missing values  
