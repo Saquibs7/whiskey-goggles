@@ -3,75 +3,116 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 from urllib.parse import urlparse
-import random
+from PIL import Image
+import io
 
-# Normalization function for folder-safe names
 def normalize(name):
+    """Safer normalization preserving key identifiers"""
     return (
         str(name)
         .strip()
         .lower()
         .replace(' ', '_')
-        .replace('-', '')
-        .replace('/', '')
-        .replace(':', '')
+        .replace('-', '_')  # Keep hyphens as underscores
         .replace('&', 'and')
-        .replace(',', '')
-        .replace('.', '')
         .replace("'", '')
         .replace('"', '')
+        .replace('/', '_')
+        .replace(':', '_')
+        .replace('__', '_')[:64]  # Limit filename length
     )
 
-# Root directory (assumes this script is in /scripts)
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-# Paths
 csv_path = os.path.join(ROOT_DIR, 'data', 'whisky_data_encoded.csv')
-train_dir = os.path.join(ROOT_DIR, 'data', 'train')
-val_dir = os.path.join(ROOT_DIR, 'data', 'val')
+image_dir = os.path.join(ROOT_DIR, 'data', 'images')
+os.makedirs(image_dir, exist_ok=True)
 
-# Create root train and val folders
-os.makedirs(train_dir, exist_ok=True)
-os.makedirs(val_dir, exist_ok=True)
+# Load data with error handling
+try:
+    df = pd.read_csv(csv_path)
+    df = df[df['image_url'].str.startswith(('http://', 'https://'), na=False)]
+    df = df.dropna(subset=['name', 'brand_id'])  # Require brand info if needed; adjust as desired.
+except Exception as e:
+    raise SystemExit(f"🚨 Data loading failed: {e}")
 
-# Load and filter CSV
-df = pd.read_csv(csv_path)
-df = df[df['image_url'].apply(lambda x: isinstance(x, str) and x.startswith('http'))]
-df = df.dropna(subset=['name'])  # Ensure name exists
+metadata = []
+failed_urls = []
 
-# Set seed and split
-random.seed(42)
-df = df.sample(frac=1).reset_index(drop=True)  # Shuffle
-split_index = int(len(df) * 0.8)
-df['split'] = ['train' if i < split_index else 'val' for i in range(len(df))]
-
-# Loop and download
-for _, row in tqdm(df.iterrows(), total=len(df)):
+for _, row in tqdm(df.iterrows(), total=len(df), desc="Downloading"):
     image_url = row['image_url']
     image_id = row['id']
-    brand_name = normalize(row['name'])
-    split = row['split']
+    name = row['name']
+    name_dir = normalize(name)
+    name_dir_path = os.path.join(image_dir, name_dir)
 
-    # Build file extension
-    ext = os.path.splitext(urlparse(image_url).path)[-1].lower()
+    os.makedirs(name_dir_path, exist_ok=True)
+
+    # Generate filename
+    ext = os.path.splitext(urlparse(image_url).path)[1][:4].lower()
     ext = ext if ext in ['.jpg', '.jpeg', '.png'] else '.jpg'
+    filename = f"{image_id}_{normalize(name)}{ext}"
+    filepath = os.path.join(name_dir_path, filename)
 
-    # Create target dir
-    target_dir = os.path.join(ROOT_DIR, 'data', split, brand_name)
-    os.makedirs(target_dir, exist_ok=True)
+    # Skip existing files
+    if os.path.exists(filepath):
+        metadata.append({
+            "id": image_id,
+            "name": name,
+            "subdir": name_dir,
+            "relative_path": os.path.relpath(filepath, ROOT_DIR),
+            "text_prompt": f"A photo of {name} {row['spirit_type']} whisky"  # CLIP prompt
+        })
+        continue
 
-    # Full file path
-    file_path = os.path.join(target_dir, f"{image_id}{ext}")
+    # Download with validation and retries
+    for attempt in range(3):
+        try:
+            response = requests.get(image_url, timeout=15, stream=True)
+            if response.status_code == 200:
+                content = response.content
 
-    # Download
-    try:
-        response = requests.get(image_url, timeout=10)
-        if response.status_code == 200:
-            with open(file_path, 'wb') as f:
-                f.write(response.content)
-        else:
-            print(f"❌ Failed to download {image_url} — Status {response.status_code}")
-    except Exception as e:
-        print(f"❌ Error downloading {image_url}: {e}")
+                # Validate image
+                try:
+                    Image.open(io.BytesIO(content)).verify()
 
-print("✅ All images downloaded and organized into train/val folders.")
+                    # Save image
+                    with open(filepath, 'wb') as f:
+                        f.write(content)
+
+                    metadata.append({
+                        "id": image_id,
+                        "name": name,
+                        "subdir": name_dir,
+                        "relative_path": os.path.relpath(filepath, ROOT_DIR),
+                        "text_prompt": (
+                            f"A photo of {name} {row['spirit_type']} whisky, "
+                            f"{row['abv']}% ABV, {row['size']}ml bottle"
+                        )
+                    })
+                    break
+                except Exception as e:
+                    print(f"🖼️ Corrupted image: {image_url} ({str(e)})")
+                    failed_urls.append(image_url)
+                    break
+            else:
+                print(f"⚠️ Attempt {attempt + 1}: HTTP {response.status_code} for {image_url}")
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt + 1}: {str(e)}")
+            if attempt == 2:
+                failed_urls.append(image_url)
+
+# Save metadata
+if metadata:
+    pd.DataFrame(metadata).to_csv(
+        os.path.join(ROOT_DIR, 'data', 'clip_metadata.csv'),
+        index=False,
+        columns=["id", "name", "subdir", "relative_path", "text_prompt"]
+    )
+    print(f"✅ Success: {len(metadata)} images downloaded to:")
+    print(f"   {os.path.relpath(image_dir, ROOT_DIR)}")
+
+    if failed_urls:
+        print(f"❌ Failed downloads ({len(failed_urls)}):")
+        print("\n".join(failed_urls[:5]))
+else:
+    print("❌ Critical: No images downloaded")

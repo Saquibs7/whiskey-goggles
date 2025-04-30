@@ -32,6 +32,7 @@ Ensure the following are installed:
 - OpenCV
 - Pandas
 - NumPy
+- clip
 
 ### 🔧 Installation
 
@@ -52,15 +53,29 @@ pip install -r requirements.txt
 - Label-encoded categorical variables (e.g., `spirit_type`)  
 - **Script:** `scripts/data_preprocessing.py`
 
-### 🖼 Image Downloading & Dataset Splitting
+### 🖼 Image Downloading & and clip_metadata generating
 - Downloaded whisky bottle images from URLs in the dataset  
-- Normalized brand names and organized images into model-ready folders  
-- **Split into:** `data/train/{brand_name}/` and `data/val/{brand_name}/`  
-- **Script:** `scripts/download_images.py`
+- Generates CLIP text prompts automatically (e.g., "A photo of Macallan 12 Scotch whisky, 43% ABV, 750ml bottle").
 
 
 ### 📊 Exploratory Data Analysis (EDA)
 - Analyzed feature distributions and checked for missing values  
 - Created visualizations for understanding trends in data  
 - **Script:** `scripts/eda.py`
+## 🚀 What We Have Done So Far
+
+### 🔍 Image Recognition & Feature Extraction
+We have implemented the core functionality to process whisky bottle images and extract visual features using CLIP (Contrastive Language-Image Pre-training). The features are then used to create embeddings for each bottle label.
+
+### 📊 Data Preprocessing & Embedding Generation
+We preprocessed the data, cleaned it, and then used CLIP to generate embeddings for each whisky bottle in the dataset. These embeddings are stored in:
+
+`data/embeddings/baxus_embeddings.npy`
+
+### 🏗 FAISS Index for Efficient Search
+A FAISS index was created to perform similarity searches. The embeddings are normalized, and we use FAISS's `IndexFlatIP` for fast, efficient nearest-neighbor search.
+
+### 🔍 Querying the System
+A script was developed to load a query image, extract its features using CLIP, and search for the most similar whisky bottle from the BAXUS dataset. The system returns the top matches along with confidence scores.
+
 
