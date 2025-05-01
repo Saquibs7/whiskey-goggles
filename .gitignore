@@ -1,8 +1,33 @@
-# Ignore Python bytecode
-*.pyc
-__pycache__/
+# Python bytecode and cache
+backend/__pycache__/
+backend/*.pyc
 
-# Ignore virtual environments
-venv/
+# Virtual environments
+backend/venv/
 env/
-data/
+backend/data/
+
+# Node.js dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Logs
+*.log
+
+# Frontend build output
+frontend/dist/
+
+# Vite temporary directory
+frontend/.vit/
+
+# ESLint cache
+frontend/.eslintcache
+
+# Rollup/Visualizer output
+frontend/stats.html
+
+# VS Code settings
+.vscode/
+
+# macOS system files (optional)
+.DS_Store
