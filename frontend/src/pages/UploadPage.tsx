@@ -67,7 +67,7 @@ const ImageUpload = () => {
     const formData = new FormData();
     formData.append('image', blob, 'upload.png');
 
-    const response = await axios.post('http://localhost:5000/api/search', formData, {
+    const response = await axios.post('https://whiskey-goggles-ufgh.onrender.com', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
