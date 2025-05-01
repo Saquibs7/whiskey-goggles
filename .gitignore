@@ -4,8 +4,9 @@ backend/*.pyc
 
 # Virtual environments
 backend/venv/
-env/
+backend/env/
 backend/data/
+backend/myenv
 
 # Node.js dependencies
 backend/node_modules/
