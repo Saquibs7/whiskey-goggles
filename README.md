@@ -42,13 +42,29 @@ Ensure the following are installed:
 - git+https://github.com/openai/CLIP.git
 
 
-### 🔧 Installation
+### 🔧 Installation and backend setting up backend
 
 ```bash
 git clone https://github.com/Saquibs7/whiskey-goggles.git
-cd whiskey-goggles
+cd backend
 pip install -r requirements.txt
+python scripts/data_preprocessing.py
+python scripts/encode_catagorical.py
+python scripts/download_images.py
+python scripts/build_index.py
+python scripts/match_query.py
+python app.py
+python test.py
+
 ```
+### 🔧 Installation and frontend
+
+```bash
+npm i
+npm run dev
+
+```
+
 ## 📁 Data Setup & Preparation
 
 ### 📂 Dataset
