@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: backend
-    env: python
-    plan: free
-    buildCommand: |
-      apt-get update && apt-get install -y cmake
-      pip install -r backend/requirements.txt
-    startCommand: gunicorn backend.app:app
