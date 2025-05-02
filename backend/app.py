@@ -117,5 +117,5 @@ def handle_search():
 
 
 if __name__ == '__main__':
-    port = os.environ.get('PORT', 5000)  # Default to 5000 if PORT is not set
+    port = os.environ.get('PORT', 5002) 
     app.run(host='0.0.0.0', port=int(port), threaded=True)
