@@ -201,7 +201,6 @@ def handle_search():
 
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5002)
-
     if os.environ.get('ENV') == 'production':
         from waitress import serve
 
@@ -209,3 +208,4 @@ if __name__ == '__main__':
     else:
         logger.info("Starting development server...")
         app.run(host='127.0.0.1', port=int(port), threaded=False)
+
